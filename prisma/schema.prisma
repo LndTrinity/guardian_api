@@ -22,6 +22,7 @@ model Usuario{
   updatedAt    DateTime       @updatedAt
   deleted      Boolean        @default(false)
   dispositivos Dispositivo[]
+  log          Usuario_log[]
 
   @@map("usuarios")
 }
@@ -33,29 +34,77 @@ model Dispositivo{
   data_fabricacao  DateTime
   usuario          Usuario?    @relation(fields: [usuarioId], references: [id])
   usuarioId        Int?
+  config           Dispositivo_config[]
+  alertas          Alerta[]
+  localizacoes     Localizacao[]
+  logs             Dispositivo_log[]
 
   @@map("dispositivos")
 }
 
-model Dispostivo_config{
-  id           Int            @id @default(autoincrement())
+model Dispositivo_config{
+  id              Int            @id @default(autoincrement())
   intervalo_envio Int
+  standby         Boolean
+  dispositivo     Dispositivo @relation(fields: [dispositivoId], references: [id])
+  dispositivoId   Int
 
-  @@map("dispositivos_config")
+
+  @@map("dispositivo_config")
 }
 
-model Alerta_config{
-  id           Int            @id @default(autoincrement())
-  descricao    String         @db.VarChar(45)
-  ativo        Boolean
+model Alerta{
+  id             Int            @id @default(autoincrement())
+  descricao      String         @db.VarChar(45)
+  ativo          Boolean
+  dispositivo    Dispositivo    @relation(fields: [dispositivoId], references: [id])
+  dispositivoId  Int
+  alerta         Alerta_tipo        @relation(fields: [alertaId], references: [id])
+  alertaId       Int
   
-  @@map("alertas_config")
+  @@map("alertas")
 }
 
 model Alerta_tipo{
   id            Int            @id @default(autoincrement())
   nome          String         @db.VarChar(45)
-  regra         Json
+  regra         String         @db.VarChar(45)
+  alerta        Alerta[]
 
   @@map("alertas_tipo")
+}
+
+model Localizacao{
+  id            Int            @id @default(autoincrement())
+  longitude     Decimal
+  latitude      Decimal
+  data_hora     DateTime
+  dispositivo   Dispositivo   @relation(fields: [dispositivoId], references: [id])
+  dispositivoId Int
+
+  @@map("localizacoes")  
+}
+
+model Dispositivo_log{
+id              Int            @id @default(autoincrement())
+data_hora       DateTime
+status_bateria  String         @db.VarChar(10)
+descricao       String?        @db.VarChar(45)
+banda_dados     String         @db.VarChar(45)
+dispositivo     Dispositivo    @relation(fields: [dispositivoId], references: [id])
+dispositivoId   Int
+
+@@map("dispositivo_log")
+
+}
+
+model Usuario_log{
+  id           Int            @id @default(autoincrement())
+  descricao    String         @db.VarChar(45)
+  data_hora    DateTime
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id])
+  usuarioId    Int
+
+  @@map("usuario_log")
+
 }
