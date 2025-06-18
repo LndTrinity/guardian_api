@@ -32,8 +32,30 @@ model Dispositivo{
   numero_de_serie  String      @db.VarChar(45)
   data_fabricacao  DateTime
   usuario          Usuario?    @relation(fields: [usuarioId], references: [id])
-  usuarioId        Int
+  usuarioId        Int?
 
   @@map("dispositivos")
 }
 
+model Dispostivo_config{
+  id           Int            @id @default(autoincrement())
+  intervalo_envio Int
+
+  @@map("dispositivos_config")
+}
+
+model Alerta_config{
+  id           Int            @id @default(autoincrement())
+  descricao    String         @db.VarChar(45)
+  ativo        Boolean
+  
+  @@map("alertas_config")
+}
+
+model Alerta_tipo{
+  id            Int            @id @default(autoincrement())
+  nome          String         @db.VarChar(45)
+  regra         Json
+
+  @@map("alertas_tipo")
+}
