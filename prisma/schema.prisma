@@ -16,15 +16,25 @@ datasource db {
 model Usuario{
   id           Int            @id @default(autoincrement())
   nome         String         @db.VarChar(45)   
-  email        String         @db.VarChar(45)
+  email        String         @unique @db.VarChar(45)
   senha        String         @db.VarChar(60)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  activade     Boolean        @default(false)
   deleted      Boolean        @default(false)
   dispositivos Dispositivo[]
   log          Usuario_log[]
 
+
   @@map("usuarios")
+}
+model Tokens{
+  id           Int            @id @default(autoincrement())
+  codigo       String         @db.VarChar(6)
+  createdAt    DateTime       @default(now())
+  email        String         @db.VarChar(20)
+  deleted      Boolean        @default(false)
+
 }
 
 model Dispositivo{
