@@ -23,12 +23,29 @@ router.post('/cadastro', async (req, res) => {
     if (isNaN(dataConvertida.getTime())) {
       res.status(400).json({ erro: "Data de fabricação inválida" });
       return 
+    
     }
+    const verifica_numero_serie = await prisma.dispositivo.findMany({
+      where: {numero_de_serie}
+    })
+    if (verifica_numero_serie.length > 0){
+      res.status(409).json({ erro: "Numero de serie existente" });
+      return 
+    }
+    
     const transaction = await prisma.$transaction(async (prisma) =>{
       const dispositivo = await prisma.dispositivo.create({
         data: 
         {modelo, numero_de_serie, data_fabricacao: dataConvertida
        }})
+      const config = await prisma.dispositivo_config.create({
+      data: {
+        intervalo_envio: Number(15),
+        standby: true,
+        dispositivoId: dispositivo.id,
+      },
+
+      })
 
         res.status(201).json(dispositivo)
     })
@@ -45,6 +62,20 @@ router.post('/cadastro', async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const dispositivo = await prisma.dispositivo.findMany({
+     
+    })
+    res.status(200).json(dispositivo)
+  } catch (error) {
+    res.status(400).json(error)
+  }
+})
+// READ ID
+router.get("/:id", async (req, res) => {
+  try {
+    const {id} = req.params
+
+    const dispositivo = await prisma.dispositivo.findUnique({
+      where: {id: Number(id)}, include:{ alertas: true, config: true}
      
     })
     res.status(200).json(dispositivo)

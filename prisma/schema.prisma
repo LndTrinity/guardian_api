@@ -20,7 +20,6 @@ model Usuario{
   senha        String         @db.VarChar(60)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
-  activade     Boolean        @default(false)
   deleted      Boolean        @default(false)
   dispositivos Dispositivo[]
   log          Usuario_log[]
@@ -41,9 +40,12 @@ model Dispositivo{
   id               Int         @id @default(autoincrement())
   modelo           String      @db.VarChar(45)
   numero_de_serie  String      @db.VarChar(45)
+  activade         Boolean        @default(false)
   data_fabricacao  DateTime
   usuario          Usuario?    @relation(fields: [usuarioId], references: [id])
   usuarioId        Int?
+  bateria          Int                @default(0)
+  status           Dispositivo_status @default(Desligado)
   config           Dispositivo_config[]
   alertas          Alerta[]
   localizacoes     Localizacao[]
@@ -117,4 +119,11 @@ model Usuario_log{
 
   @@map("usuario_log")
 
+}
+enum Dispositivo_status {
+  Em_movimento
+  Parado
+  Ligado
+  Desligado
+  Standby
 }

@@ -1,3 +1,4 @@
+import { error } from "console";
 import { PrismaClient } from "../../generated/prisma";
 import { Router, Request, Response } from "express";
 
@@ -15,19 +16,18 @@ router.post("/", async (req: Request, res: Response) => {
   const bytes_quant = Buffer.byteLength(jsonString, "utf8");
   const kilobytes = Number(bytes_quant / 1024);
   banda_dados_ = kilobytes
-  console.log(kilobytes)
-  
-  
 
-  if (
+
+  
+  // salva no log
+  try {
+    if (
     longitude === undefined ||
     latitude === undefined ||
     !dispositivoId
   ) {
-    return ;
+    throw error
   }
-  // salva no log
-  try {
     const log = await prisma.dispositivo_log.create({
       data: {
         data_hora: new Date(),
@@ -44,6 +44,9 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   try {
+    const bateria_statu = await prisma.dispositivo.update({
+      where: {id: dispositivoId}, data: {bateria: Number(status_bateria)}
+    })
     const localizacao = await prisma.localizacao.create({
       data: {
         longitude,

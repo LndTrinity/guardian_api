@@ -1,3 +1,4 @@
+import { error } from "console";
 import { PrismaClient } from "../../generated/prisma";
 import { Router, Request, Response } from "express";
 
@@ -10,18 +11,19 @@ const router = Router();
 router.post("/", async (req, res) => {
   const { nome, regra } = req.body;
 
-  if (!nome || !regra) {
-    return;
-  }
+
 
   try {
+    if (!nome || !regra) {
+      throw error;
+    }
     // Verifica duplicidade de nome
     const nomeExiste = await prisma.alerta_tipo.findFirst({
       where: { nome },
     });
 
     if (nomeExiste) {
-      return ;
+      throw error;
     }
 
     const tipo = await prisma.alerta_tipo.create({
@@ -59,6 +61,7 @@ router.put("/:id", async (req: Request, res: Response) => {
   const { nome, regra } = req.body;
 
   try {
+  
     const tipo = await prisma.alerta_tipo.update({
       where: { id: Number(id) },
       data: { nome, regra },

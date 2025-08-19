@@ -5,7 +5,6 @@ const prisma = new PrismaClient()
 const router = Router()
 
 
-// CREATE
 
 router.post('/signin', async (req, res) => {
   const { intervalo_envio, standby, dispositivoId } = req.body;

@@ -10,7 +10,7 @@ const prisma = new PrismaClient()
 const router = Router()
 
 //                                              CRUD
-// CREATE
+// TOKEN
 router.post("/cadastro/token", async (req, res) => {
   const { codigo, email } = req.body
 
@@ -52,7 +52,8 @@ router.post("/cadastro/token", async (req, res) => {
   }
 })
 
-router.post('/Cadastro', async (req, res) => {
+// CREATE
+router.post('/cadastro', async (req, res) => {
   const { nome, email, senha } = req.body;
   const dezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000)
 
@@ -140,6 +141,19 @@ router.delete('/:id', async (req, res) => {
     res.status(400).json({ error: "Erro ao atualizar usuário." });
   }
 });
+// RETORNO POR ID
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const usuarios = await prisma.usuario.findMany({
+      where: {id: Number(id)}, include:{ dispositivos: true}
+    })
+    res.status(200).json(usuarios)
+  } catch (error) {
+    res.status(400).json(error)
+  }
+})
 //LOGIN
 router.post("/login", async (req, res) => {
   const { email, senha } = req.body
@@ -215,7 +229,8 @@ router.post('/vincula_dispositivo', async (req, res) => {
 
   try {
     const transaction = await prisma.$transaction(async (prisma) =>{
-      const vincular = await prisma.dispositivo.update({ where: { id:Number(dispositivos[0].id) }, data: {usuarioId: id_usuario} });
+      const vincular = await prisma.dispositivo.update({ where: { id:Number(dispositivos[0].id) }, data: {usuarioId: id_usuario, activade: true} });
+      
 
         res.status(201).json(vincular)
     })
