@@ -1,7 +1,6 @@
 import { PrismaClient } from "../../generated/prisma"
 import { Router } from "express"
 import { validaSenha } from "../utils/utils"
-import bcrypt from 'bcrypt'
 
 import { enviaEmail, gerarString } from "../utils/utils"
 
@@ -16,7 +15,7 @@ router.post("/cadastro/token", async (req, res) => {
   const { codigo, email } = req.body
 
   const dezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000)
-
+  
 
   const cliente = await prisma.tokens.findMany({
     where: {
@@ -31,36 +30,32 @@ router.post("/cadastro/token", async (req, res) => {
     res.status(400).json({ erro: "Código incorreto" })
 
     return
+  } else {
+    const usuarioId = await prisma.usuario.findFirst({
+      where: {email: email}, select:{ id: true}
+    });
+    const usuarioId_number = Number(usuarioId)
+    const atualizaCliente = await prisma.usuario.update({
+      where:{ id: usuarioId_number}, data:{
+        deleted: false
+      }
+    })
+    const atualizaToken = await prisma.tokens.update({
+      where: {
+        id: cliente[0].id, // O token que você quer atualizar
+      },
+      data: {
+        deleted: true,  // Atualiza o campo para marcar o token como usado
+      },
+    });
+    res.status(201).json(cliente)
   }
-  const usuarioId = await prisma.usuario.findUnique({
-    where: { email: email }, select: { id: true }
-  });
-  if (!usuarioId) {
-    res.status(400).json({ erro: "Usuário não encontrado" });
-    return 
-  }
-
-  const atualizaCliente = await prisma.usuario.update({
-    where: { id: usuarioId.id }, data: {
-      deleted: false
-    }
-  })
-  const atualizaToken = await prisma.tokens.update({
-    where: {
-      id: cliente[0].id, // O token que você quer atualizar
-    },
-    data: {
-      deleted: true,  // Atualiza o campo para marcar o token como usado
-    },
-  });
-  res.status(201).json(cliente)
 })
 
-
 // CREATE
-router.post("/cadastro", async (req, res) => {
-  const { nome, email, senha } = req.body
-  // console.log(nome,email,senha)
+router.post('/cadastro', async (req, res) => {
+  const { nome, email, senha } = req.body;
+  const dezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000)
 
   if (!nome || !email || !senha) {
     res.status(400).json({ erro: "Informe nome, email e senha" })
@@ -71,34 +66,34 @@ router.post("/cadastro", async (req, res) => {
   const erros = validaSenha(senha)
   if (erros.length > 0) {
     res.status(400).json({ erro: erros.join("; ") })
-    // console.log("erro na senha")
     return
   }
   const clienteEmail = await prisma.usuario.findMany({
-    where: { email: email }
+    where: { email: email, deleted : false }
   })
 
-  if (clienteEmail.length > 0) {
-    res.status(400).json({ erro: "Email ja cadastrado" })
-    // console.log("erro no email")
-
+  if (clienteEmail.length > 0 ) {
+    res.status(400).json({ erro: "ERRO" })
     return
   }
 
-  // 12 é o número de voltas (repetições) que o algoritmo faz
-  // para gerar o salt (sal/tempero)
-  const salt = bcrypt.genSaltSync(12)
-  // gera o hash da senha acrescida do salt
-  const hash = bcrypt.hashSync(senha, salt)
-
   // para o campo senha, atribui o hash gerado
   try {
-    const cliente = await prisma.usuario.create({
-      data: { nome, email, senha: hash }
-    })
-    res.status(201).json(cliente)
-  } catch (error) {
+    const transaction = await prisma.$transaction(async (prisma) =>{
+      const cliente = await prisma.usuario.create({
+        data: 
+        {nome: nome,
+        email: email,
+        senha: senha,
+        deleted: false
+       }})
 
+        res.status(201).json(cliente)
+    })
+    
+    
+  } catch (error) {
+   
     res.status(400).json(error)
   }
 })
@@ -116,7 +111,7 @@ router.get("/all", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const usuarios = await prisma.usuario.findMany({
-      where: { deleted: false }
+      where: {deleted : false}
     })
     res.status(200).json(usuarios)
   } catch (error) {
@@ -129,7 +124,7 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const usuario = await prisma.usuario.update({ where: { id: id }, data });
+    const usuario = await prisma.usuario.update({ where: { id:Number(id) }, data });
     res.json(usuario);
   } catch (error) {
     res.status(400).json({ error: "Erro ao atualizar usuário." });
@@ -140,7 +135,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const usuario = await prisma.usuario.update({ where: { id: id }, data: { deleted: true } });
+    const usuario = await prisma.usuario.update({ where: { id:Number(id) }, data: {deleted: true} });
     res.json(usuario);
   } catch (error) {
     res.status(400).json({ error: "Erro ao atualizar usuário." });
@@ -152,7 +147,7 @@ router.get("/:id", async (req, res) => {
     const { id } = req.params;
 
     const usuarios = await prisma.usuario.findMany({
-      where: { id: id }, include: { dispositivos: true }
+      where: {id: Number(id)}, include:{ dispositivos: true}
     })
     res.status(200).json(usuarios)
   } catch (error) {
@@ -170,7 +165,7 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    const usuario = await prisma.usuario.findUnique({
+    const usuario= await prisma.usuario.findUnique({
       where: { email }
     })
 
@@ -180,7 +175,7 @@ router.post("/login", async (req, res) => {
     }
 
     // se o e-mail existe, faz-se a comparação dos hashs
-    if (usuario.senha == senha) {
+    if (usuario.senha == senha){
       res.status(200).json({ id: usuario.id, nome: usuario.nome })
 
     } else {
@@ -199,7 +194,7 @@ router.post('/vincula_dispositivo', async (req, res) => {
     return
   }
 
-
+ 
   const dispositivos = await prisma.dispositivo.findMany({
     where: { numero_de_serie: numero_dispositivo }
   })
@@ -207,15 +202,15 @@ router.post('/vincula_dispositivo', async (req, res) => {
     where: { id: id_usuario }
   })
   const usuario_dispositivos = await prisma.dispositivo.findMany({
-    where: {
-      usuarioId: {
-        not: null, // retorna se houver um usuario vinculado
-      },
+  where: {
+    usuarioId: {
+      not: null, // retorna se houver um usuario vinculado
     },
-    // include: {
-    //   usuario: true, // retorna todos os dados do usuário 
-    // },
-  });
+  },
+  // include: {
+  //   usuario: true, // retorna todos os dados do usuário 
+  // },
+});
 
   if (dispositivos.length <= 0) {
     res.status(400).json({ erro: "Dispositivo não encontrado" })
@@ -227,22 +222,22 @@ router.post('/vincula_dispositivo', async (req, res) => {
     return
   }
 
-  if (usuario_dispositivos.length > 0) {
+  if (usuario_dispositivos.length > 0){
     res.status(400).json({ erro: "Dispositivo já cadastradado" })
     return
   }
 
   try {
-    const transaction = await prisma.$transaction(async (prisma) => {
-      const vincular = await prisma.dispositivo.update({ where: { id: dispositivos[0].id }, data: { usuarioId: id_usuario, activade: true } });
+    const transaction = await prisma.$transaction(async (prisma) =>{
+      const vincular = await prisma.dispositivo.update({ where: { id:Number(dispositivos[0].id) }, data: {usuarioId: id_usuario, activade: true} });
+      
 
-
-      res.status(201).json(vincular)
+        res.status(201).json(vincular)
     })
-
-
+    
+    
   } catch (error) {
-
+   
     res.status(400).json(error)
   }
 })

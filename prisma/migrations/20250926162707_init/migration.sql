@@ -8,6 +8,18 @@ CREATE TABLE `usuarios` (
     `updatedAt` DATETIME(3) NOT NULL,
     `deleted` BOOLEAN NOT NULL DEFAULT false,
 
+    UNIQUE INDEX `usuarios_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Tokens` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `codigo` VARCHAR(6) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `email` VARCHAR(20) NOT NULL,
+    `deleted` BOOLEAN NOT NULL DEFAULT false,
+
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -16,8 +28,11 @@ CREATE TABLE `dispositivos` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `modelo` VARCHAR(45) NOT NULL,
     `numero_de_serie` VARCHAR(45) NOT NULL,
+    `activade` BOOLEAN NOT NULL DEFAULT false,
     `data_fabricacao` DATETIME(3) NOT NULL,
     `usuarioId` INTEGER NULL,
+    `bateria` INTEGER NOT NULL DEFAULT 0,
+    `status` ENUM('Em_movimento', 'Parado', 'Ligado', 'Desligado', 'Standby') NOT NULL DEFAULT 'Desligado',
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

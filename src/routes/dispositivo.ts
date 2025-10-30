@@ -75,7 +75,7 @@ router.get("/:id", async (req, res) => {
     const {id} = req.params
 
     const dispositivo = await prisma.dispositivo.findUnique({
-      where: {id: Number(id)}, include:{ alertas: true, config: true}
+      where: {id: id}, include:{ alertas: true, config: true}
      
     })
     res.status(200).json(dispositivo)
@@ -89,7 +89,7 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const dispositivo = await prisma.dispositivo.update({ where: { id:Number(id) }, data });
+    const dispositivo = await prisma.dispositivo.update({ where: { id:id }, data });
     res.json(dispositivo);
   } catch (error) {
     res.status(400).json({ error: "Erro ao atualizar dispositivo." });
@@ -100,7 +100,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const usuario = await prisma.usuario.delete({ where: { id:Number(id) } });
+    const usuario = await prisma.usuario.delete({ where: { id: id  } });
     res.json(usuario);
   } catch (error) {
     res.status(400).json({ error: "Erro ao atualizar usuário." });

@@ -14,7 +14,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 model Usuario{
-  id           Int            @id @default(autoincrement())
+  id           String         @db.VarChar(36) @id @default(uuid())
   nome         String         @db.VarChar(45)   
   email        String         @unique @db.VarChar(45)
   senha        String         @db.VarChar(60)
@@ -37,13 +37,13 @@ model Tokens{
 }
 
 model Dispositivo{
-  id               Int         @id @default(autoincrement())
+  id               String         @db.VarChar(12) @id @default(uuid())
   modelo           String      @db.VarChar(45)
   numero_de_serie  String      @db.VarChar(45)
   activade         Boolean        @default(false)
   data_fabricacao  DateTime
   usuario          Usuario?    @relation(fields: [usuarioId], references: [id])
-  usuarioId        Int?
+  usuarioId        String?
   bateria          Int                @default(0)
   status           Dispositivo_status @default(Desligado)
   config           Dispositivo_config[]
@@ -59,7 +59,7 @@ model Dispositivo_config{
   intervalo_envio Int
   standby         Boolean
   dispositivo     Dispositivo @relation(fields: [dispositivoId], references: [id])
-  dispositivoId   Int
+  dispositivoId   String
 
 
   @@map("dispositivo_config")
@@ -70,7 +70,7 @@ model Alerta{
   descricao      String         @db.VarChar(45)
   ativo          Boolean
   dispositivo    Dispositivo    @relation(fields: [dispositivoId], references: [id])
-  dispositivoId  Int
+  dispositivoId  String
   alerta         Alerta_tipo        @relation(fields: [alertaId], references: [id])
   alertaId       Int
   
@@ -92,7 +92,7 @@ model Localizacao{
   latitude      Decimal
   data_hora     DateTime
   dispositivo   Dispositivo   @relation(fields: [dispositivoId], references: [id])
-  dispositivoId Int
+  dispositivoId String
 
   @@map("localizacoes")  
 }
@@ -104,7 +104,7 @@ status_bateria  String         @db.VarChar(10)
 descricao       String?        @db.VarChar(45)
 banda_dados     String         @db.VarChar(45)
 dispositivo     Dispositivo    @relation(fields: [dispositivoId], references: [id])
-dispositivoId   Int
+dispositivoId   String
 
 @@map("dispositivo_log")
 
@@ -115,7 +115,7 @@ model Usuario_log{
   descricao    String         @db.VarChar(45)
   data_hora    DateTime
   usuario      Usuario       @relation(fields: [usuarioId], references: [id])
-  usuarioId    Int
+  usuarioId    String
 
   @@map("usuario_log")
 
